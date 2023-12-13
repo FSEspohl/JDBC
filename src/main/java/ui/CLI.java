@@ -1,13 +1,20 @@
 package ui;
 
+import dataaccess.DatabaseException;
+import dataaccess.MyCourseRepository;
+import domain.Course;
+
+import java.util.List;
 import java.util.Scanner;
 
 public class CLI {
 
     Scanner scan;
+    MyCourseRepository repo;
 
-    public CLI(){
+    public CLI(MyCourseRepository repo){
         this.scan = new Scanner(System.in);
+        this.repo = repo;
     }
 
     public void start(){
@@ -20,7 +27,7 @@ public class CLI {
                     System.out.println("Kurseingabe");
                     break;
                 case "2" :
-                    System.out.println("Alle Kurse anzeigen");
+                    showAllCourses();
                     break;
                 case "x" :
                     System.out.println("Auf Wiedersehen!");
@@ -31,6 +38,25 @@ public class CLI {
             }
         }
         scan.close();
+    }
+
+    private void showAllCourses() {
+        List<Course> list = null;
+
+        try {
+            list = repo.getAll();
+            if (list.size() > 0) {
+                for (Course course : list) {
+                    System.out.println(course);
+                }
+            } else {
+                System.out.println("Kursliste leer!");
+            }
+        } catch (DatabaseException databaseException){
+            System.out.println("Datenbankfehler bei Anzeige aller Kurse: " + databaseException.getMessage());
+        } catch (Exception e){
+            System.out.println("Unbekannter Fheler bei Anzeige aller Kurse: " + e.getMessage());
+        }
     }
 
     private void showMenu(){
