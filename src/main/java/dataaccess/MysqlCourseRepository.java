@@ -158,7 +158,17 @@ public class MysqlCourseRepository implements MyCourseRepository{
 
     @Override
     public void deleteByID(Long id) {
-
+        Assert.notNull(id);
+        String sql = "DELETE FROM `courses` WHERE `id` = ?";
+        try {
+            if (countCoursesInDbWithId(id) == 1) {
+                PreparedStatement preparedStatement = con.prepareStatement(sql);
+                preparedStatement.setLong(1, id);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException sqlException) {
+            throw new DatabaseException(sqlException.getMessage());
+        }
     }
 
     @Override

@@ -41,6 +41,9 @@ public class CLI {
                 case "4" :
                     updateCourseDetails();
                     break;
+                case "5" :
+                    deleteCourse();
+                    break;
                 case "x" :
                     System.out.println("Auf Wiedersehen!");
                     break;
@@ -50,6 +53,19 @@ public class CLI {
             }
         }
         scan.close();
+    }
+
+    private void deleteCourse() {
+        System.out.println("Welchen Kurs möchten Sie löschen? Bitte ID eingeben:");
+        Long courseIdToDelete = Long.parseLong(scan.nextLine());
+
+        try {
+            repo.deleteByID(courseIdToDelete);
+        } catch (DatabaseException databaseException) {
+            System.out.println("Datenbankfehler beim Löschen: " + databaseException.getMessage());
+        } catch (Exception e) {
+            System.out.println("Unbekannter Fehler beim Löschen: " + e.getMessage());
+        }
     }
 
     private void updateCourseDetails() {
@@ -100,8 +116,14 @@ public class CLI {
                 );
 
             }
+        } catch (IllegalArgumentException illegalArgumentException) {
+            System.out.println("Eingabefehler: " + illegalArgumentException.getMessage());
+        } catch (InvalidValueException invalidValueException) {
+            System.out.println("Kursdaten nicht korrekt angegeben: " + invalidValueException.getMessage());
+        } catch (DatabaseException databaseException) {
+            System.out.println("Datenbankfehler beim Update: " + databaseException.getMessage());
         } catch (Exception exception) {
-            System.out.println("Unbekannter Fehler beim Kursupdate: " + exception.getMessage());
+            System.out.println("Unbekannter Fehler beim Update: " + exception.getMessage());
         }
 
     }
@@ -127,7 +149,7 @@ public class CLI {
             dateFrom = Date.valueOf(scan.nextLine());
             System.out.println("Enddatum (YYYY-MM-DD): ");
             dateTo = Date.valueOf(scan.nextLine());
-            System.out.println("Kurstyp (ZA/BR/FF/OE): ");
+            System.out.println("Kurstyp (ZA/BF/FF/OE): ");
             courseType = CourseType.valueOf(scan.nextLine());
 
             Optional<Course> optionalCourse = repo.insert(
@@ -184,13 +206,13 @@ public class CLI {
         } catch (DatabaseException databaseException){
             System.out.println("Datenbankfehler bei Anzeige aller Kurse: " + databaseException.getMessage());
         } catch (Exception e){
-            System.out.println("Unbekannter Fheler bei Anzeige aller Kurse: " + e.getMessage());
+            System.out.println("Unbekannter Fehler bei Anzeige aller Kurse: " + e.getMessage());
         }
     }
 
     private void showMenu(){
         System.out.println("\n______________________ KURSMANAGEMENT ______________________");
-        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t (3) Kursdetails anzeigen \n(4) Kursdaten bearbeiten \t (5) xxx \t (6) xxx \n(x) ENDE");
+        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t (3) Kursdetails anzeigen \n(4) Kursdaten bearbeiten \t (5) Kurs löschen \t (6) xxx \n(x) ENDE");
     }
 
     private void inputError(){
