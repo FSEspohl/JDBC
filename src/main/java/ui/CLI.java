@@ -3,13 +3,19 @@ package ui;
 import dataaccess.DatabaseException;
 import dataaccess.MyCourseRepository;
 import domain.Course;
+import domain.CourseType;
+import domain.InvalidValueException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
+import java.sql.Date;
 
 public class CLI {
 
     Scanner scan;
+
+    // Data Access Object - DAO
     MyCourseRepository repo;
 
     public CLI(MyCourseRepository repo){
@@ -24,10 +30,13 @@ public class CLI {
             input = scan.nextLine();
             switch(input){
                 case "1" :
-                    System.out.println("Kurseingabe");
+                    addCourse();
                     break;
                 case "2" :
                     showAllCourses();
+                    break;
+                case "3" :
+                    showCourseDetails();
                     break;
                 case "x" :
                     System.out.println("Auf Wiedersehen!");
@@ -38,6 +47,69 @@ public class CLI {
             }
         }
         scan.close();
+    }
+
+    private void addCourse() {
+        
+        String name, description;
+        int hours;
+        Date dateFrom, dateTo;
+        CourseType courseType;
+        
+        try {
+            System.out.println("Bitte alle Kursdaten angeben:");
+            System.out.println("Name: ");
+            name = scan.nextLine();
+            if(name.equals("")) throw new IllegalArgumentException(("Eingabe darf nicht leer sein!"));
+            System.out.println("Beschreibung: ");
+            description = scan.nextLine();
+            if(description.equals("")) throw new IllegalArgumentException("Eingabe darf nicht leer sein!");
+            System.out.println("Stundenanzahl: ");
+            hours = Integer.parseInt(scan.nextLine());
+            System.out.println("Startdatum (YYYY-MM-DD): ");
+            dateFrom = Date.valueOf(scan.nextLine());
+            System.out.println("Enddatum (YYYY-MM-DD): ");
+            dateTo = Date.valueOf(scan.nextLine());
+            System.out.println("Kurstyp (ZA/BR/FF/OE): ");
+            courseType = CourseType.valueOf(scan.nextLine());
+
+            Optional<Course> optionalCourse = repo.insert(
+                    new Course(name, description, hours, dateFrom, dateTo, courseType)
+            );
+
+            if(optionalCourse.isPresent()){
+                System.out.println("Kurs angelegt: " + optionalCourse.get());
+            } else {
+                System.out.println("Kurs konnte nicht angelegt werden!");
+            }
+            
+        } catch (IllegalArgumentException illegalArgumentException) {
+            System.out.println("Eingabefehler: " + illegalArgumentException.getMessage());
+        } catch (InvalidValueException invalidValueException) {
+            System.out.println("Kursdaten nicht korrekt angegeben: " + invalidValueException.getMessage());
+        } catch (DatabaseException databaseException) {
+            System.out.println("Datenbankfehler beim Einfügen: " + databaseException.getMessage());
+        } catch (Exception exception) {
+            System.out.println("Unbekannter Fehler beim Einfügen: " + exception.getMessage());
+        }
+        
+    }
+
+    private void showCourseDetails() {
+        System.out.println("Für welchen Kurs möchten Sie die Kursdetails anzeigen?");
+        Long courseId = Long.parseLong((scan.nextLine()));
+        try {
+            Optional<Course> courseOptional = repo.getByID(courseId);
+            if(courseOptional.isPresent()){
+                System.out.println(courseOptional.get());
+            } else {
+                System.out.println("Kurs mit der ID " + courseId + " nicht gefunden!");
+            }
+        } catch (DatabaseException databaseException){
+            System.out.println("Datenbankfehler bei Kurs-Detailanzeige: " + databaseException.getMessage());
+        } catch (Exception exception) {
+            System.out.println("Unbekannter Fehler bei Kurs-Detailanzeige: " + exception.getMessage());
+        }
     }
 
     private void showAllCourses() {
@@ -61,7 +133,7 @@ public class CLI {
 
     private void showMenu(){
         System.out.println("\n______________________ KURSMANAGEMENT ______________________");
-        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t (x) ENDE");
+        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t (3) Kursdetails anzeigen \t (x) ENDE");
     }
 
     private void inputError(){

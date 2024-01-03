@@ -9,5 +9,5 @@ public interface BaseRepository<T,I> {
     Optional<T> getByID(I ID);
     List<T> getAll();
     Optional<T> update(T entity);
-    void deleteByIT(I id);
+    void deleteByID(I id);
 }
