@@ -44,6 +44,9 @@ public class CLI {
                 case "5" :
                     deleteCourse();
                     break;
+                case "6" :
+                    courseSearch();
+                    break;
                 case "x" :
                     System.out.println("Auf Wiedersehen!");
                     break;
@@ -53,6 +56,22 @@ public class CLI {
             }
         }
         scan.close();
+    }
+
+    private void courseSearch() {
+        System.out.println("Geben Sie einen Suchbegriff an!");
+        String searchString = scan.nextLine();
+        List<Course> courseList;
+        try {
+            courseList = repo.findAllCoursesByNameOrDescription(searchString);
+            for(Course course : courseList){
+                System.out.println(course);
+            }
+        } catch (DatabaseException databaseException) {
+            System.out.println("Datenbankfehler bei der Kurssuche: " + databaseException.getMessage());
+        } catch (Exception exception) {
+            System.out.println("Unbekannter Fehler bei der Kurssuche: " + exception.getMessage());
+        }
     }
 
     private void deleteCourse() {
@@ -212,7 +231,7 @@ public class CLI {
 
     private void showMenu(){
         System.out.println("\n______________________ KURSMANAGEMENT ______________________");
-        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t (3) Kursdetails anzeigen \n(4) Kursdaten bearbeiten \t (5) Kurs löschen \t (6) xxx \n(x) ENDE");
+        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t (3) Kursdetails anzeigen \n(4) Kursdaten bearbeiten \t (5) Kurs löschen \t (6) Kurssuche per Wortsuche \n(x) ENDE");
     }
 
     private void inputError(){
