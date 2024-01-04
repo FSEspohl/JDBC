@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 import java.sql.Date;
-import java.util.concurrent.ExecutionException;
 
 public class CLI {
 
