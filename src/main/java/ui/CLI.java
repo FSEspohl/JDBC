@@ -16,46 +16,80 @@ public class CLI {
     Scanner scan;
 
     // Data Access Object - DAO
-    MyCourseRepository repo;
+    MyCourseRepository courseRepo;
 
-    public CLI(MyCourseRepository repo){
+    public CLI(MyCourseRepository courseRepo){
         this.scan = new Scanner(System.in);
-        this.repo = repo;
+        this.courseRepo = courseRepo;
     }
 
     public void start(){
         String input = "-";
+        Boolean done = false;
+
         while(!input.equals("x")){
-            showMenu();
+            showStartMenu();
             input = scan.nextLine();
-            switch(input){
-                case "1" :
-                    addCourse();
-                    break;
-                case "2" :
-                    showAllCourses();
-                    break;
-                case "3" :
-                    showCourseDetails();
-                    break;
-                case "4" :
-                    updateCourseDetails();
-                    break;
-                case "5" :
-                    deleteCourse();
-                    break;
-                case "6" :
-                    courseSearch();
-                    break;
-                case "7" :
-                    runningCourses();
-                    break;
-                case "x" :
-                    System.out.println("Auf Wiedersehen!");
-                    break;
-                default:
-                    inputError();
-                    break;
+            if(input.equals("1")){
+                while(!input.equals("z")){
+                    showCourseMenu();
+                    input = scan.nextLine();
+                    switch(input){
+                        case "1" :
+                            addCourse();
+                            break;
+                        case "2" :
+                            showAllCourses();
+                            break;
+                        case "3" :
+                            showCourseDetails();
+                            break;
+                        case "4" :
+                            updateCourseDetails();
+                            break;
+                        case "5" :
+                            deleteCourse();
+                            break;
+                        case "6" :
+                            courseSearch();
+                            break;
+                        case "7" :
+                            runningCourses();
+                            break;
+                        case "z" :
+                            break;
+                        default:
+                            inputError();
+                            break;
+                    }
+                }
+                done = true;
+            } else if (input.equals("2")) {
+                while (!input.equals("z")){
+                    showStudentMenu();
+                    input = scan.nextLine();
+                    switch (input) {
+                        case "1" :
+                            System.out.println("Student:In eintragen");
+                            break;
+                        case "2" :
+                            System.out.println("Alle Studierenden anzeigen");
+                            break;
+                        case "3" :
+                            System.out.println("Student:In austragen");
+                            break;
+                        case "z" :
+                            break;
+                        default:
+                          inputError();
+                          break;
+                    }
+                }
+                done = true;
+            } else if (input.equals("x")){
+                System.out.println("Auf Wiedersehen!");
+            } else {
+                System.out.println("Eingabe konnte nicht bearbeitet werden, versuchen Sie es noch einmal!");
             }
         }
         scan.close();
@@ -65,7 +99,7 @@ public class CLI {
         System.out.println("Aktuell laufende Kurse:");
         List<Course> list;
         try {
-            list = repo.findAllRunningCourses();
+            list = courseRepo.findAllRunningCourses();
             for (Course course : list){
                 System.out.println(course);
             }
@@ -81,7 +115,7 @@ public class CLI {
         String searchString = scan.nextLine();
         List<Course> courseList;
         try {
-            courseList = repo.findAllCoursesByNameOrDescription(searchString);
+            courseList = courseRepo.findAllCoursesByNameOrDescription(searchString);
             for(Course course : courseList){
                 System.out.println(course);
             }
@@ -97,7 +131,7 @@ public class CLI {
         Long courseIdToDelete = Long.parseLong(scan.nextLine());
 
         try {
-            repo.deleteByID(courseIdToDelete);
+            courseRepo.deleteByID(courseIdToDelete);
         } catch (DatabaseException databaseException) {
             System.out.println("Datenbankfehler beim Löschen: " + databaseException.getMessage());
         } catch (Exception e) {
@@ -110,7 +144,7 @@ public class CLI {
         System.out.println("Für welche Kurs-ID möchten Sie die Kursdetails ändern?");
         Long courseId = Long.parseLong(scan.nextLine());
         try {
-            Optional<Course> optionalCourse = repo.getByID(courseId);
+            Optional<Course> optionalCourse = courseRepo.getByID(courseId);
             if(optionalCourse.isEmpty()) {
                 System.out.println("Kurs mit der angegebenen ID nicht in der Datenbank!");
             } else {
@@ -135,7 +169,7 @@ public class CLI {
                 System.out.println("Kurstyp (ZA/BF/FF/OE): ");
                 courseType = scan.nextLine();
 
-                Optional<Course> optionalCourseUpdated = repo.update(
+                Optional<Course> optionalCourseUpdated = courseRepo.update(
                         new Course(
                                 course.getID(),
                                 name.equals("") ? course.getName() : name,
@@ -189,7 +223,7 @@ public class CLI {
             System.out.println("Kurstyp (ZA/BF/FF/OE): ");
             courseType = CourseType.valueOf(scan.nextLine());
 
-            Optional<Course> optionalCourse = repo.insert(
+            Optional<Course> optionalCourse = courseRepo.insert(
                     new Course(name, description, hours, dateFrom, dateTo, courseType)
             );
 
@@ -215,7 +249,7 @@ public class CLI {
         System.out.println("Für welchen Kurs möchten Sie die Kursdetails anzeigen?");
         Long courseId = Long.parseLong((scan.nextLine()));
         try {
-            Optional<Course> courseOptional = repo.getByID(courseId);
+            Optional<Course> courseOptional = courseRepo.getByID(courseId);
             if(courseOptional.isPresent()){
                 System.out.println(courseOptional.get());
             } else {
@@ -232,7 +266,7 @@ public class CLI {
         List<Course> list = null;
 
         try {
-            list = repo.getAll();
+            list = courseRepo.getAll();
             if (list.size() > 0) {
                 for (Course course : list) {
                     System.out.println(course);
@@ -247,10 +281,27 @@ public class CLI {
         }
     }
 
-    private void showMenu(){
+
+
+
+    // CLI STRINGS
+
+    private void showCourseMenu(){
         System.out.println("\n______________________ KURSMANAGEMENT ______________________");
-        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t (3) Kursdetails anzeigen \n(4) Kursdaten bearbeiten \t (5) Kurs löschen \t (6) Kurssuche per Wortsuche \n(7) Laufende Kurse anzeigen \t (8) --- \t (9) --- \n(x) ENDE");
+        System.out.println("(1) Kurs eingeben \t (2) Alle Kurse anzeigen \t (3) Kursdetails anzeigen \n(4) Kursdaten bearbeiten \t (5) Kurs löschen \t (6) Kurssuche per Wortsuche \n(7) Laufende Kurse anzeigen \t (8) --- \t (9) --- \n(z) ZURÜCK");
     }
+
+    private void showStudentMenu(){
+        System.out.println("\n______________________ STUDIERENDEN-MANAGEMENT ______________________");
+        System.out.println("(1) Student:In eintragen \t (2) Alle Studierenden anzeigen \t (3) Student:In austragen \t (4) --- \n(z) ZURÜCK");
+    }
+
+    private void showStartMenu(){
+        System.out.println("______________________ MENÜAUSWAHL ______________________");
+        System.out.println("(1) Kursmanagement \t (2) Studierenden-Management\n(x) BEENDEN");
+    }
+
+
 
     private void inputError(){
         System.out.println("Bitte nur die Zahlen der Menüauswahl eingeben!");
