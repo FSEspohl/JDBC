@@ -2,9 +2,11 @@ package ui;
 
 import dataaccess.DatabaseException;
 import dataaccess.MyCourseRepository;
+import dataaccess.MyStudentRepository;
 import domain.Course;
 import domain.CourseType;
 import domain.InvalidValueException;
+import domain.Student;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,10 +19,12 @@ public class CLI {
 
     // Data Access Object - DAO
     MyCourseRepository courseRepo;
+    MyStudentRepository studentRepo;
 
-    public CLI(MyCourseRepository courseRepo){
+    public CLI(MyCourseRepository courseRepo, MyStudentRepository studentRepo){
         this.scan = new Scanner(System.in);
         this.courseRepo = courseRepo;
+        this.studentRepo = studentRepo;
     }
 
     public void start(){
@@ -70,13 +74,19 @@ public class CLI {
                     input = scan.nextLine();
                     switch (input) {
                         case "1" :
-                            System.out.println("Student:In eintragen");
+                            addStudent();
                             break;
                         case "2" :
-                            System.out.println("Alle Studierenden anzeigen");
+                            deleteStudent();
                             break;
                         case "3" :
-                            System.out.println("Student:In austragen");
+                            showAllStudents();
+                            break;
+                        case "4" :
+                            showStudentDetails();
+                            break;
+                        case "5" :
+                            showAllStudentsByYear();
                             break;
                         case "z" :
                             break;
@@ -95,6 +105,8 @@ public class CLI {
         scan.close();
     }
 
+
+    // COURSE-FUNCTIONS
     private void runningCourses() {
         System.out.println("Aktuell laufende Kurse:");
         List<Course> list;
@@ -196,7 +208,6 @@ public class CLI {
         } catch (Exception exception) {
             System.out.println("Unbekannter Fehler beim Update: " + exception.getMessage());
         }
-
     }
 
     private void addCourse() {
@@ -242,7 +253,6 @@ public class CLI {
         } catch (Exception exception) {
             System.out.println("Unbekannter Fehler beim Einfügen: " + exception.getMessage());
         }
-        
     }
 
     private void showCourseDetails() {
@@ -282,6 +292,119 @@ public class CLI {
     }
 
 
+    //STUDENT-FUNCTIONS
+
+    private void addStudent() {
+
+        String firstname, lastname;
+        Date birthdate;
+
+        try {
+            System.out.println("Bitte alle Daten der Person angeben:");
+            System.out.println("Vorname: ");
+            firstname = scan.nextLine();
+            if(firstname.equals("")) throw new IllegalArgumentException(("Eingabe darf nicht leer sein!"));
+            System.out.println("Nachname: ");
+            lastname = scan.nextLine();
+            if(lastname.equals("")) throw new IllegalArgumentException("Eingabe darf nicht leer sein!");
+            System.out.println("Geburtsdatum der Person (YYYY-MM-DD): ");
+            birthdate = Date.valueOf(scan.nextLine());
+
+
+
+            Optional<Student> optionalStudent = studentRepo.insert(
+                    new Student(firstname, lastname, birthdate)
+            );
+
+            if(optionalStudent.isPresent()){
+                System.out.println("Student:In angelegt: " + optionalStudent.get());
+
+            } else {
+                System.out.println("Student:In konnte nicht angelegt werden!");
+            }
+
+        } catch (IllegalArgumentException illegalArgumentException) {
+            System.out.println("Eingabefehler: " + illegalArgumentException.getMessage());
+        } catch (InvalidValueException invalidValueException) {
+            System.out.println("Daten der Person nicht korrekt angegeben: " + invalidValueException.getMessage());
+        } catch (DatabaseException databaseException) {
+            System.out.println("Datenbankfehler beim Einfügen: " + databaseException.getMessage());
+        } catch (Exception exception) {
+            System.out.println("Unbekannter Fehler beim Einfügen: " + exception.getMessage());
+        }
+    }
+
+    private void deleteStudent() {
+        System.out.println("Welche:n Student:In möchten Sie austragen? Bitte ID eingeben:");
+        Long studentIdToDelete = Long.parseLong(scan.nextLine());
+
+        try {
+            studentRepo.deleteByID(studentIdToDelete);
+        } catch (DatabaseException databaseException) {
+            System.out.println("Datenbankfehler beim Austragen: " + databaseException.getMessage());
+        } catch (Exception e) {
+            System.out.println("Unbekannter Fehler beim Austragen: " + e.getMessage());
+        }
+    }
+
+    private void showAllStudents() {
+        List<Student> list = null;
+
+        try {
+            list = studentRepo.getAll();
+            if (list.size() > 0) {
+                for (Student student : list) {
+                    System.out.println(student);
+                }
+            } else {
+                System.out.println("Studierendenliste leer!");
+            }
+        } catch (DatabaseException databaseException){
+            System.out.println("Datenbankfehler bei Anzeige aller Studierenden: " + databaseException.getMessage());
+        } catch (Exception e){
+            System.out.println("Unbekannter Fehler bei Anzeige aller Studierenden: " + e.getMessage());
+        }
+    }
+
+    private void showStudentDetails() {
+        System.out.println("Für welchen Studierenden möchten Sie die Details anzeigen?");
+        Long studentId = Long.parseLong((scan.nextLine()));
+        try {
+            Optional<Student> studentOptional = studentRepo.getByID(studentId);
+            if(studentOptional.isPresent()){
+                System.out.println(studentOptional.get());
+            } else {
+                System.out.println("Student:In mit der ID " + studentId + " nicht gefunden!");
+            }
+        } catch (DatabaseException databaseException){
+            System.out.println("Datenbankfehler bei Studierenden-Detailanzeige: " + databaseException.getMessage());
+        } catch (Exception exception) {
+            System.out.println("Unbekannter Fehler bei Studierenden-Detailanzeige: " + exception.getMessage());
+        }
+    }
+
+    private void showAllStudentsByYear(){
+        List<Student> list = null;
+        System.out.println("Geben Sie das Geburtsjahr ein: ");
+        int birthdateForSearch = Integer.parseInt(scan.nextLine());
+        try {
+            list = studentRepo.findAllStudentsByBirthyear(birthdateForSearch);
+            if (!list.isEmpty()) {
+                for (Student student : list) {
+                    System.out.println(student);
+                }
+            } else {
+                System.out.println("Keine Studierenden mit diesem Geburtsjahr gefunden!");
+            }
+        } catch (DatabaseException databaseException){
+            System.out.println("Datenbankfehler bei Anzeige der Studierenden: " + databaseException.getMessage());
+        } catch (Exception e){
+            System.out.println("Unbekannter Fehler bei Anzeige der Studierenden: " + e.getMessage());
+        }
+
+
+    }
+
 
 
     // CLI STRINGS
@@ -293,7 +416,7 @@ public class CLI {
 
     private void showStudentMenu(){
         System.out.println("\n______________________ STUDIERENDEN-MANAGEMENT ______________________");
-        System.out.println("(1) Student:In eintragen \t (2) Alle Studierenden anzeigen \t (3) Student:In austragen \t (4) --- \n(z) ZURÜCK");
+        System.out.println("(1) Student:In eintragen \t (2) Student:In austragen \t (3) Alle Studierenden anzeigen \n(4) Studierendendetails aufrufen \t (5) Studierende nach Geburtsjahr anzeigen\n(z) ZURÜCK");
     }
 
     private void showStartMenu(){

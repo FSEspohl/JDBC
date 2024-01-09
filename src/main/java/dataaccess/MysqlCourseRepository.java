@@ -117,7 +117,6 @@ public class MysqlCourseRepository implements MyCourseRepository{
         } catch (SQLException e) {
             throw new DatabaseException("Database error occured!");
         }
-
     }
 
     @Override
@@ -151,9 +150,6 @@ public class MysqlCourseRepository implements MyCourseRepository{
                 throw new DatabaseException(sqlException.getMessage());
             }
         }
-
-
-
     }
 
     @Override

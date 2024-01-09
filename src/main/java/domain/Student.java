@@ -30,7 +30,11 @@ public class Student extends BaseEntity{
     }
 
     public void setFirstname(String firstname) {
-        this.firstname = firstname;
+        if(firstname != null && firstname.length() > 1){
+            this.firstname = firstname;
+        } else {
+            throw new InvalidValueException("Vorname muss mindestens 2 Zeichen lang sein!");
+        }
     }
 
     public String getLastname() {
@@ -38,7 +42,11 @@ public class Student extends BaseEntity{
     }
 
     public void setLastname(String lastname) {
-        this.lastname = lastname;
+        if(lastname != null && lastname.length() > 1){
+            this.lastname = lastname;
+        } else {
+            throw new InvalidValueException("Nachname muss mindestens 2 Zeichen lang sein!");
+        }
     }
 
     public Date getBirthdate() {
@@ -46,6 +54,19 @@ public class Student extends BaseEntity{
     }
 
     public void setBirthdate(Date birthdate) {
-        this.birthdate = birthdate;
+        if(birthdate != null){
+            this.birthdate = birthdate;
+        } else {
+            throw new InvalidValueException("Das Geburtsdatum darf nicht null/leer sein!");
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" + "ID=" + ID +
+                ", firstname='" + firstname + '\'' +
+                ", lastname='" + lastname + '\'' +
+                ", birthdate=" + birthdate +
+                '}';
     }
 }
